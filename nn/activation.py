@@ -50,5 +50,12 @@ def _diff_softmax(z,y):
     return one_yi +z
 
 
+def get_activations():
+    return {"identity":identity, "relu":relu, "softmax":softmax,"tanh":tanh, "sigmoid":sigmoid, "leaky_relu":leaky_relu}
+
+def get_activations_diff():
+    return {"identity":_diff_identity, "relu":_diff_relu, "softmax":_diff_softmax,"tanh":_diff_tanh, "sigmoid":_diff_sigmoid, "leaky_relu":_diff_leaky_relu}
+
+
 
 
