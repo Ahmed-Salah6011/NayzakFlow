@@ -108,7 +108,10 @@ def MultiClassHingeLoss_OneHotEncoded(y,yhat):
 
 
 
-    
+def get_diffs():
+    return {MSE:_diff_MSE , MAE:_diff_MAE, PerceptronCriteria:_diff_PerceptronCriteria, HingeLoss:_diff_HingeLoss,
+            SigmoidLogLikelihood: _diff_SigmoidLogLikelihood , IdentityLogLikelihood:_diff_IdentityLogLikelihood, 
+            MultiClassPerceptronCriteria:_diff_MultiClassPerceptronCriteria , MultiClassHingeLoss:_diff_MultiClassHingeLoss}
 
 
 

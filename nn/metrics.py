@@ -50,3 +50,6 @@ def f1_score(y,yhat):
     R = recall(matrix)
     P = percision(matrix)
     return((2*P*R)/(P+R))
+
+def get_metrics():
+    return {"accuracy":accuracy, "precision": percision, "recall":recall,"f1-score":f1_score}
