@@ -44,8 +44,8 @@ class CSVReader():
             # x_train= x_train.T
 
             if self.is_one_hot: 
-                y_train= _onehot(y_train).T
-                y_valid= _onehot(y_valid).T
+                y_train= _onehot(y_train,y_train.max()+1).T
+                y_valid= _onehot(y_valid,y_valid.max()+1).T
 
             return (x_train,y_train), (x_valid,y_valid)
         else:
@@ -55,7 +55,7 @@ class CSVReader():
             # x=x.T
 
             if self.is_one_hot: 
-                y= _onehot(y).T
+                y= _onehot(y,y.max()+1).T
 
             return (x,y)
 
@@ -113,15 +113,15 @@ class SparseDataReader():
             y_train= y[n_ele:]
             
             if self.onehot: 
-                y_train= _onehot(y_train[:,0]).T
-                y_valid= _onehot(y_valid[:,0]).T
+                y_train= _onehot(y_train[:,0],y_train[:,0].max()+1).T
+                y_valid= _onehot(y_valid[:,0],y_valid[:,0].max()+1).T
             
 
             return (x_train,y_train), (x_valid,y_valid)
         
         else:
             if self.onehot:  
-                y= _onehot(y[:,0]).T
+                y= _onehot(y[:,0],y[:,0].max()+1).T
 
 
             return (x,y)

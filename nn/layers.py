@@ -49,9 +49,10 @@ class Linear():
         else:
             f_dash = nf.nn.activation.get_activations_diff()[self.act_name](self.Z)
 
+        e = np.ones((self.X.shape[1],1))
         bet= input * f_dash
         self.dW= np.dot(bet,self.X.T)
-        self.db= bet
+        self.db= np.dot(bet,e)
 
         return np.dot(self.W.T, bet)
     
@@ -64,7 +65,7 @@ class Model():
 
 class Sequential(Model):
     def __init__(self,layers=None):
-        super(Sequential).__init__(self)
+        super().__init__()
         if layers == None:
             self.layers=None
         else:
@@ -109,13 +110,13 @@ class Sequential(Model):
     def _bathcing(self,x,y,bs):
         x= x.copy()
         y=y.copy()
-        no_of_batches= np.ceil(len(x)/bs)
+        no_of_batches= int(np.ceil(len(x)/bs))
         # remaining_elements_no = (len(x)%bs)
 
         out_x=[]
         out_y=[]
         for _ in range(no_of_batches):
-            if len(x)<bs:
+            if len(x)<=bs:
                 out_x.append(x)
                 out_y.append(y)
                 break
@@ -135,7 +136,7 @@ class Sequential(Model):
     def fit(self, train_data,validation_data=None, batch_size=32, epochs=5):
         x_train = train_data[0]
         y_train = train_data[1]
-        no_of_batches_train= np.ceil(len(x_train)/batch_size)
+        no_of_batches_train= int(np.ceil(len(x_train)/batch_size))
         if validation_data:
             x_valid= validation_data[0]
             y_valid= validation_data[1]
@@ -147,32 +148,44 @@ class Sequential(Model):
         for i in range(epochs):
             print("Epoch {}/{}....".format(i+1,epochs),end=" ")
             for j in range(no_of_batches_train):
-                y_hat= self.forward(x_train[j])
-                dl = nf.nn.loss.get_diffs()[self.loss](y_train[j],y_hat)
-                self.backward(dl)
+                curr_x =x_train[j].T
+                curr_y = y_train[j].T
+                y_hat= self.forward(curr_x)
 
+                if self.loss ==nf.nn.loss.SoftmaxLogLikelihood:
+                    self.layers[-1]._set_target(curr_y)
+                    self.backward(1)
+                
+                else:
+                    dl = nf.nn.loss.get_diffs()[self.loss](curr_y,y_hat)
+                    self.backward(dl)
+                
+                
                 if j == no_of_batches_train-1: #last batch
-                    loss= self.loss(y_train[j],y_hat)
+                    loss= self.loss(curr_y,y_hat)
                     print("loss: {}....".format(loss),end=" ")
                     #calc metrics
-                    for m in self.metrics.keys():
-                        met = self.metrics[m](y_train[j],y_hat)
-                        print("{}: {}...".format(m,met),end=" ")
-
-
-                self.optimizer.update(self.layers)
+                    # for m in self.metrics.keys():
+                    #     met = self.metrics[m](curr_y,y_hat)
+                    #     print("{}: {}...".format(m,met),end=" ")
+                if batch_size ==1:
+                    N= train_data[0].shape[0]
+                else:
+                    N= curr_x.shape[-1]
+                self.optimizer.update(self.layers,N)
+                
             
             ###
             if validation_data:
-                y_hat_val = self.forward(x_valid)
-                loss_val= self.loss(y_valid,y_hat_val)
+                y_hat_val = self.forward(x_valid.T)
+                loss_val= self.loss(y_valid.T,y_hat_val)
                 print("val_loss: {}....".format(loss_val),end=" ")
                 #calc metrics
-                for m in self.metrics.keys():
-                        met = self.metrics[m](y_valid,y_hat_val)
-                        print("val_{}: {}...".format(m,met),end=" ")
+                # for m in self.metrics.keys():
+                #         met = self.metrics[m](y_valid,y_hat_val)
+                #         print("val_{}: {}...".format(m,met),end=" ")
             ###
-                
+            print()
 
 
 

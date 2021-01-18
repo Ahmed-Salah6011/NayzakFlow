@@ -44,7 +44,7 @@ def softmax(z):
 
 def _diff_softmax(z,y):
     yhat_r = softmax(z)
-    onehotY = _onehot(y)
+    onehotY = _onehot(y,z.shape[0])
     one_yi = onehotY *-1*(1-yhat_r)
     z=(1-onehotY)*yhat_r
     return one_yi +z
