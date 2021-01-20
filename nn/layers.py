@@ -2,6 +2,7 @@ import nayzakflow as nf
 import numpy as np
 import pandas as pd
 import random
+import pickle
 
 class Linear():
     def __init__(self,n_output,n_input, activation="identity",name=None,parameter_initializer="normal",parameters=None,target=None):
@@ -29,7 +30,18 @@ class Linear():
 
         self.Z=None
         self.X=None
-        
+    
+    def set_params(self,W,b):
+        self.W= W
+        self.b= b
+    
+    def get_params(self):
+        return [self.W, self.b]
+
+
+    def zeroing_delta(self):
+        self.dW= np.zeros_like(self.W,dtype='float64')
+        self.db= np.zeros_like(self.b,dtype='float64')
 
     def _set_target(self, t):
         self.target=t
@@ -51,8 +63,9 @@ class Linear():
 
         e = np.ones((self.X.shape[1],1))
         bet= input * f_dash
-        self.dW= np.dot(bet,self.X.T)
-        self.db= np.dot(bet,e)
+
+        self.dW= self.dW+ np.dot(bet,self.X.T)
+        self.db= self.db+ np.dot(bet,e)
 
         return np.dot(self.W.T, bet)
     
@@ -106,6 +119,9 @@ class Sequential(Model):
         for layer in self.layers[::-1]:
             gd = layer.backward(gd)
     
+    def zeroing(self):
+        for layer in self.layers:
+            layer.zeroing_delta()
 
     def _bathcing(self,x,y,bs):
         x= x.copy()
@@ -149,6 +165,9 @@ class Sequential(Model):
             print("Epoch {}/{}....".format(i+1,epochs),end=" ")
             for j in range(no_of_batches_train):
                 curr_x =x_train[j].T
+                # print("####")
+                # print(curr_x)
+                # print("####")
                 curr_y = y_train[j].T
                 y_hat= self.forward(curr_x)
 
@@ -164,14 +183,27 @@ class Sequential(Model):
                 if j == no_of_batches_train-1: #last batch
                     loss= self.loss(curr_y,y_hat)
                     print("loss: {}....".format(loss),end=" ")
-                    #calc metrics
-                    # for m in self.metrics.keys():
-                    #     met = self.metrics[m](curr_y,y_hat)
-                    #     print("{}: {}...".format(m,met),end=" ")
+                    ######
+                    # calc metrics
+                    if y_hat.shape[0]>1:
+                        yh = np.argmax(y_hat, axis=0)
+                    else:
+                        if self.loss != nf.nn.loss.MSE or self.loss != nf.nn.loss.MAE :
+                            yh= np.zeros_like(y_hat)
+                            yh[y_hat>=0.5] = np.max((curr_y[0]))
+                            yh[y_hat<0.5] = np.min((curr_y[0]))
+                            yh=np.array(yh[0], dtype='int')
+                        ###missing regression condition
+
+                    for m in self.metrics.keys():
+                        met = self.metrics[m](curr_y[0],yh)
+                        print("{}: {}   ".format(m,met),end=" ")
+                    ######
                 if batch_size ==1:
                     N= train_data[0].shape[0]
                 else:
                     N= curr_x.shape[-1]
+
                 self.optimizer.update(self.layers,N)
                 
             
@@ -180,12 +212,90 @@ class Sequential(Model):
                 y_hat_val = self.forward(x_valid.T)
                 loss_val= self.loss(y_valid.T,y_hat_val)
                 print("val_loss: {}....".format(loss_val),end=" ")
+                ######
                 #calc metrics
-                # for m in self.metrics.keys():
-                #         met = self.metrics[m](y_valid,y_hat_val)
-                #         print("val_{}: {}...".format(m,met),end=" ")
+                for m in self.metrics.keys():
+                        met = self.metrics[m](y_valid[0],np.argmax(y_hat_val,axis=0))
+                        print("val_{}: {}   ".format(m,met),end=" ")
+                #####
             ###
             print()
+            self.zeroing()
+
+    def predict(self,data): #data dim is NxD .. N no of examples.. D no of dimension
+        y_hat= self.forward(data.T)
+        return y_hat.T
+    
+    def evaluate(self,x_test,y_test):
+        y_hat= self.forward(x_test.T)
+        loss= self.loss(y_test.T,y_hat)
+
+        #########################################error here
+        metrics=[]
+        #calc metric
+        if y_hat.shape[0]>1:
+            yh = np.argmax(y_hat, axis=0)
+        else:
+            if self.loss != nf.nn.loss.MSE or self.loss != nf.nn.loss.MAE :
+                yh= np.zeros_like(y_hat)
+                yh[y_hat>=0.5] = np.max((y_test[0]))
+                yh[y_hat<0.5] = np.min((y_test[0]))
+                yh=np.array(yh[0], dtype='int')
+
+
+        for m in self.metrics.keys():
+            met = self.metrics[m](y_test.T,yh)
+            metrics.append(met)
+        #########################################
+        return (loss , metrics)
+    
+    def get_weights(self):
+        params=[]
+        for layer in self.layers:
+            params.append(layer.get_params())
+        
+        return params
+
+    def save_weights(self, path):
+        #the path containing the file name
+        params= []
+        for layer in self.layers:
+            layer_param= [layer.W , layer.b]
+            params.append(layer_param)
+        
+        # params = np.array(params)
+        file = open(path, 'wb')
+
+        # dump information to that file
+        pickle.dump(params, file)
+
+        # close the file
+        file.close()
+    
+    def load_weights(self, path):
+        file = open(path, 'rb')
+
+        # dump information to that file
+        params = pickle.load(file)
+
+        # close the file
+        file.close()
+
+        i=0
+        for layer in self.layers:
+            layer.set_params(params[i][0],params[i][1])
+            i+=1
+        
+
+
+
+        
+            
+
+
+
+
+
 
 
 

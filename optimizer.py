@@ -12,12 +12,12 @@ class GD():
             # layers[i].db=layers[i].db/N
             layers[i].W = layers[i].W - self.alpha * (layers[i].dW/N)
             layers[i].b = layers[i].b - self.alpha * (layers[i].db/N)
-            print("delta: ")
-            print("dW",layers[i].dW)
-            print("db",layers[i].db)
-            print("Weights: ")
-            print("W",layers[i].W)
-            print("b",layers[i].b)
+            # print("delta: ")
+            # print("dW",layers[i].dW)
+            # print("db",layers[i].db)
+            # print("Weights: ")
+            # print("W",layers[i].W)
+            # print("b",layers[i].b)
 
             
 

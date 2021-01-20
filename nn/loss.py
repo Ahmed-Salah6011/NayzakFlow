@@ -22,25 +22,25 @@ def _diff_MAE(y,yhat):
 
 
 def PerceptronCriteria(y,yhat):
-    return (1/(y.shape[1]))* np.sum(np.max(0, -1*y*yhat))
+    return (1/(y.shape[1]))* np.sum(np.maximum(0, -1*y*yhat))
 
 def _diff_PerceptronCriteria(y,yhat):
-    diff = np.array( (y*yhat)<0, dtype="int" )
+    diff = np.array( (y*yhat)<=0, dtype="int" )
     diff*= (-1*y)
     return diff
 
 
 def HingeLoss(y,yhat):
-    return (1/(y.shape[1]))* np.sum(np.max(0, 1-y*yhat))
+    return (1/(y.shape[1]))* np.sum(np.maximum(0, 1-y*yhat))
 
 def _diff_HingeLoss(y,yhat):
-    diff = np.array( (y*yhat)<1, dtype="int" )
+    diff = np.array( (y*yhat)<=1, dtype="int" )
     diff*= (-1*y)
     return diff
 
 
 def SigmoidLogLikelihood(y,yhat):
-    return -1*(1/(y.shape[1]))*np.sum(-1*np.log(np.abs((y/2)-0.5+yhat)))
+    return (1/(y.shape[1]))*np.sum(-1*np.log(np.abs((y/2)-0.5+yhat)))
 
 def _diff_SigmoidLogLikelihood(y,yhat):
     return -1* y/ ( (((1+y)/2)*yhat) + (((1-y)/2)*(1-yhat))  )
@@ -80,18 +80,18 @@ def _diff_MultiClassPerceptronCriteria(y,yhat):
 def MultiClassHingeLoss(y,yhat):
     onehotY= _onehot(y,yhat.shape[0])
     yhat_r = np.max(onehotY*yhat, axis=0,keepdims=True)
-    z=1+(yhat_r-yhat)
+    z=1+(yhat-yhat_r)
     z= (1-onehotY)*z
     d= np.maximum(z,0)
-    return (1/(y.shape[1]))*np.sum(d, axis=0)
+    return (1/(y.shape[1]))*np.sum(np.sum(d, axis=0))
 
 def _diff_MultiClassHingeLoss(y,yhat):
     onehotY= _onehot(y,yhat.shape[0])
     yhat_r = np.max(onehotY*yhat, axis=0,keepdims=True)
-    z=1+(yhat_r-yhat)
+    z=1+(yhat-yhat_r)
     z= (1-onehotY)*z
     d= np.maximum(z,0)
-    de = np.sum(d>0)
+    de = np.sum(d>0,axis=0)
     out = np.zeros_like(yhat)
     out[d>0]=1
     out = out+ onehotY*(-de)
