@@ -33,13 +33,13 @@ class CSVReader():
 
 
             x_valid= ds_valid.copy()
-            y_valid= np.expand_dims(x_valid.pop(self.label_name).to_numpy(), axis=0).astype('int')
+            y_valid= np.expand_dims(x_valid.pop(self.label_name).to_numpy(), axis=1).astype('int')
             x_valid= x_valid.to_numpy()
             # x_valid= x_valid.T
 
 
             x_train= ds_train.copy()
-            y_train= np.expand_dims(x_train.pop(self.label_name).to_numpy(), axis=0).astype('int')
+            y_train= np.expand_dims(x_train.pop(self.label_name).to_numpy(), axis=1).astype('int')
             x_train= x_train.to_numpy()
             # x_train= x_train.T
 
@@ -50,7 +50,7 @@ class CSVReader():
             return (x_train,y_train), (x_valid,y_valid)
         else:
             x= ds.copy()
-            y= np.expand_dims(x.pop(self.label_name).to_numpy() ,axis=0).astype('int')
+            y= np.expand_dims(x.pop(self.label_name).to_numpy() ,axis=1).astype('int')
             x= x.to_numpy()
             # x=x.T
 
@@ -62,7 +62,7 @@ class CSVReader():
 
 
 class SparseDataReader():
-    def __init__(self,folder_path,output_size,RGB=True,split=None,onehot=False):
+    def __init__(self,folder_path,output_size=None,RGB=True,split=None,onehot=False):
         self.folder_path= folder_path
         self.split= split
         self.onehot= onehot
@@ -87,7 +87,8 @@ class SparseDataReader():
                 else:
                     img = cv2.imread(os.path.join(path,example))
 
-                img = cv2.resize(img,self.output_size,interpolation=cv2.INTER_AREA)
+                if self.output_size:
+                    img = cv2.resize(img,self.output_size,interpolation=cv2.INTER_AREA)
                 examples_list.append(img)
                 labels_list.append(encoded_classes[clas])
         
