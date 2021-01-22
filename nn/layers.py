@@ -146,12 +146,46 @@ class Sequential(Model):
         
 
         
-
+    def _calc_metrics(self, y,y_hat,labels,val=False,eval=False,metrics=None):
+        if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:
+            if y_hat.shape[0]>1:
+                yh = np.argmax(y_hat, axis=0)
+            else:
+                yh= np.zeros_like(y_hat)
+                yh[y_hat>=0.5] = np.max((y[0]))
+                yh[y_hat<0.5] = np.min((y[0]))
+                yh=np.array(yh[0], dtype='int')
+        
+        else:
+            yh= y_hat
+        #missing reg
+            
+        if eval:
+            for m in self.metrics.keys():
+                met = self.metrics[m](y,yh)
+                metrics.append(met)
+            
+            return metrics
+            
+        else:
+            for m in self.metrics.keys():
+                met = self.metrics[m](y[0],yh,labels)
+                if val:
+                    print("val_{}: {}   ".format(m,met),end=" ")
+                else:
+                    print("{}: {}   ".format(m,met),end=" ")
 
 
     def fit(self, train_data,validation_data=None, batch_size=32, epochs=5):
         x_train = train_data[0]
         y_train = train_data[1]
+
+        ###
+        if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:
+            self.labels = set(y_train.T[0])
+        else:
+            self.labels = None
+        ###
         no_of_batches_train= int(np.ceil(len(x_train)/batch_size))
         if validation_data:
             x_valid= validation_data[0]
@@ -185,19 +219,7 @@ class Sequential(Model):
                     print("loss: {}....".format(loss),end=" ")
                     ######
                     # calc metrics
-                    if y_hat.shape[0]>1:
-                        yh = np.argmax(y_hat, axis=0)
-                    else:
-                        if self.loss != nf.nn.loss.MSE or self.loss != nf.nn.loss.MAE :
-                            yh= np.zeros_like(y_hat)
-                            yh[y_hat>=0.5] = np.max((curr_y[0]))
-                            yh[y_hat<0.5] = np.min((curr_y[0]))
-                            yh=np.array(yh[0], dtype='int')
-                        ###missing regression condition
-
-                    for m in self.metrics.keys():
-                        met = self.metrics[m](curr_y[0],yh)
-                        print("{}: {}   ".format(m,met),end=" ")
+                    self._calc_metrics(curr_y,y_hat,self.labels)
                     ######
                 if batch_size ==1:
                     N= train_data[0].shape[0]
@@ -214,9 +236,7 @@ class Sequential(Model):
                 print("val_loss: {}....".format(loss_val),end=" ")
                 ######
                 #calc metrics
-                for m in self.metrics.keys():
-                        met = self.metrics[m](y_valid[0],np.argmax(y_hat_val,axis=0))
-                        print("val_{}: {}   ".format(m,met),end=" ")
+                self._calc_metrics(y_valid,y_hat_val,self.labels,True)
                 #####
             ###
             print()
@@ -233,19 +253,7 @@ class Sequential(Model):
         #########################################error here
         metrics=[]
         #calc metric
-        if y_hat.shape[0]>1:
-            yh = np.argmax(y_hat, axis=0)
-        else:
-            if self.loss != nf.nn.loss.MSE or self.loss != nf.nn.loss.MAE :
-                yh= np.zeros_like(y_hat)
-                yh[y_hat>=0.5] = np.max((y_test[0]))
-                yh[y_hat<0.5] = np.min((y_test[0]))
-                yh=np.array(yh[0], dtype='int')
-
-
-        for m in self.metrics.keys():
-            met = self.metrics[m](y_test.T,yh)
-            metrics.append(met)
+        metrics= self._calc_metrics(y_test.T,y_hat,self.labels,eval=True,metrics=metrics)
         #########################################
         return (loss , metrics)
     

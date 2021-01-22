@@ -1,27 +1,12 @@
 import numpy as np
 import pandas as pd
 
-def confusion_matrix(y,yhat):
-    # data = {'y_Actual':   y,
-    #     'y_Predicted': yhat
-    #     }
-    # df = pd.DataFrame(data, columns=['y_Actual','y_Predicted'])
-    # confusion_matrix = pd.crosstab(df['y_Actual'], df['y_Predicted'], rownames=['Actual'], colnames=['Predicted'])
-    # # y_actu = pd.Series(y, name='Actual')
-    # # y_pred = pd.Series(yhat, name='Predicted')
-    # # df_confusion = pd.crosstab(y_actu,y_pred)
-    # # print(df_confusion)
-    # return confusion_matrix.to_numpy()
-    currentDataClass =y
-    predictedClass = yhat
-    classes = int(max(currentDataClass) - min(currentDataClass)) + 1 #find number of classes
-
-    counts = [[sum([(currentDataClass[i] == true_class) and (predictedClass[i] == pred_class) 
-                    for i in range(len(currentDataClass))])
-            for pred_class in range(1, classes + 1)] 
-            for true_class in range(1, classes + 1)]
-
-    return np.array(counts)
+def confusion_matrix(y,yhat,labels):
+    y_actu = pd.Series(y, name='Actual')
+    y_pred = pd.Series(yhat, name='Predicted')
+    df_confusion = pd.crosstab(y_pred,y_actu,dropna=False)
+    df_confusion = df_confusion.reindex(index=labels, columns= labels, fill_value=0)
+    return df_confusion.to_numpy()
 
 def calc(confusion_matrix):
     if(confusion_matrix.shape[0] == 2):
@@ -40,31 +25,36 @@ def calc(confusion_matrix):
     # print(TP.shape)
     return [TP,FN,FP,TN]
 
-def accuracy(y,yhat):
-    matrix = confusion_matrix(y,yhat)
+def accuracy(y,yhat,labels):
+    matrix = confusion_matrix(y,yhat,labels)
     test = calc(matrix)
     # print(test)
     x = test[0] + test[3]
     z = test[0] +test[1] +test[2] +test[3] 
     return(x/z)
 
-def percision(y,yhat):
-    matrix = confusion_matrix(y,yhat)
+def percision(y,yhat,labels):
+    matrix = confusion_matrix(y,yhat,labels)
     test = calc(matrix)
     # print(test[0]/(test[0]+test[1]))
     return test[0]/(test[0]+test[2])
 
-def recall(y,yhat):
-    matrix = confusion_matrix(y,yhat)
+def recall(y,yhat,labels):
+    matrix = confusion_matrix(y,yhat,labels)
     test = calc(matrix)
     # print(test[0]/(test[0]+test[1]))
     return test[0]/(test[0]+test[1])
 
-def f1_score(y,yhat):
-    matrix = confusion_matrix(y,yhat)
-    R = recall(matrix)
-    P = percision(matrix)
+def f1_score(y,yhat,labels):
+    R = recall(y,yhat,labels)
+    P = percision(y,yhat,labels)
     return((2*P*R)/(P+R))
 
+def mae(y,yhat,labels=None):
+    return (1/len(y))*np.sum(np.abs(y-yhat))
+
+def rmse(y,yhat,labels=None):
+    return np.sqrt((1/len(y))*np.sum(np.square(y-yhat)))
+
 def get_metrics():
-    return {"accuracy":accuracy, "precision": percision, "recall":recall,"f1-score":f1_score}
+    return {"accuracy":accuracy, "precision": percision, "recall":recall,"f1-score":f1_score, "mae":mae, "rmse": rmse}
