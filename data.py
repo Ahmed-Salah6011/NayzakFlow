@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 from nayzakflow.utils import _onehot
 import cv2
+import random
 
 class CSVReader():
     def __init__(self,path,label_col_name,mode="regression",split=None,oneHotLabel=False):
@@ -128,9 +129,6 @@ class SparseDataReader():
             return (x,y)
         
 
-
-
-        
 
 
 

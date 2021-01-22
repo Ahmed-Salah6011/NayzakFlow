@@ -41,8 +41,8 @@ class Linear():
 
 
     def zeroing_delta(self):
-        self.dW= np.zeros_like(self.W,dtype='float64')
-        self.db= np.zeros_like(self.b,dtype='float64')
+        self.dW= np.zeros_like(self.W)
+        self.db= np.zeros_like(self.b)
 
     def _set_target(self, t):
         self.target=t
@@ -123,29 +123,7 @@ class Sequential(Model):
     def zeroing(self):
         for layer in self.layers:
             layer.zeroing_delta()
-
-    def _bathcing(self,x,y,bs):
-        x= x.copy()
-        y=y.copy()
-        no_of_batches= int(np.ceil(len(x)/bs))
-        # remaining_elements_no = (len(x)%bs)
-
-        out_x=[]
-        out_y=[]
-        for _ in range(no_of_batches):
-            if len(x)<=bs:
-                out_x.append(x)
-                out_y.append(y)
-                break
-            indx=list(random.sample(range(len(x)),bs))
-            out_x.append(x[indx])
-            out_y.append(y[indx])
-            x=np.delete(x,indx,axis=0)
-            y=np.delete(y,indx,axis=0)
         
-        return (np.array(out_x), np.array(out_y))
-        
-
         
     def _calc_metrics(self, y,y_hat,labels,val=False,eval=False,metrics=None):
         if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:
@@ -179,25 +157,48 @@ class Sequential(Model):
 
             return mms
 
+    def batch(self,x,y,bs):
+        x= x.copy()
+        y=y.copy()
+        # no_of_batches= int(np.ceil(len(x)/bs))
+        rem= x.shape[0] % bs
+
+
+        # out_x=[]
+        # out_y=[]
+        for i in range(0,x.shape[0],bs):
+            # if len(x)<=bs:
+            #     # out_x.append(x)
+            #     # out_y.append(y)
+            #     yield (x.copy(), y.copy())
+            #     break
+            # indx=list(random.sample(range(len(x)),bs))
+            # curr_x= x[indx].copy()
+            # curr_y= y[indx].copy()
+            # # out_x.append(x[indx])
+            # # out_y.append(y[indx])
+            # x=np.delete(x,indx,axis=0)
+            # y=np.delete(y,indx,axis=0)
+            yield (x[i:i+bs],y[i:i+bs])
+        
+        if rem !=0:
+            yield (x[x.shape[0]-rem:],y[x.shape[0]-rem:] )
+
+        # return (np.array(out_x), np.array(out_y))
+
     def fit(self, train_data,validation_data=None, batch_size=32, epochs=5,plot=False):
         x_train = train_data[0]
         y_train = train_data[1]
-
+        no_of_batches_train = np.ceil(x_train.shape[0]/batch_size)
         ###
         if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:
-            self.labels = set(y_train.T[0])
+            self.labels = np.unique(y_train)
         else:
             self.labels = None
         ###
-        no_of_batches_train= int(np.ceil(len(x_train)/batch_size))
         if validation_data:
             x_valid= validation_data[0]
             y_valid= validation_data[1]
-            # x_valid, y_valid= self._bathcing(x_valid, y_valid,batch_size)
-            # no_of_batches_valid= np.ceil(len(x_valid)/batch_size)
-        
-        x_train, y_train= self._bathcing(x_train, y_train,batch_size)
-
 
         ##############visualization
         if plot:
@@ -219,14 +220,15 @@ class Sequential(Model):
 
 
         for i in range(epochs):
-            print("Epoch {}/{}....".format(i+1,epochs),end=" ")
+            print("Epoch {}/{}".format(i+1,epochs))
             v_l=[]
-            for j in range(no_of_batches_train):
-                curr_x =x_train[j].T
-                # print("####")
-                # print(curr_x)
-                # print("####")
-                curr_y = y_train[j].T
+            j=0
+            k=0
+            data=self.batch(x_train,y_train,batch_size)
+            for curr_x,curr_y in data:
+                # print(curr_x.shape)
+                curr_x =curr_x.T
+                curr_y = curr_y.T
                 y_hat= self.forward(curr_x)
 
                 if self.loss ==nf.nn.loss.SoftmaxLogLikelihood:
@@ -237,10 +239,15 @@ class Sequential(Model):
                     dl = nf.nn.loss.get_diffs()[self.loss](curr_y,y_hat)
                     self.backward(dl)
                 
-                
+                if int(0.1*no_of_batches_train) == (k+1):
+                    print("=",end="")
+                    k=0
+                # print(j)
+                # print(no_of_batches_train)
                 if j == no_of_batches_train-1: #last batch
                     loss= self.loss(curr_y,y_hat)
                     v_l.append(loss)
+                    print()
                     print("loss: {}....".format(loss),end=" ")
 
                     ######
@@ -253,7 +260,8 @@ class Sequential(Model):
                     N= curr_x.shape[-1]
 
                 self.optimizer.update(self.layers,N)
-                
+                j+=1
+                k+=1
             
             ###
             if validation_data:
