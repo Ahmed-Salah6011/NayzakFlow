@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 import pickle
+import matplotlib.pyplot as plt
 
 class Linear():
     def __init__(self,n_output,n_input, activation="identity",name=None,parameter_initializer="normal",parameters=None,target=None):
@@ -158,25 +159,27 @@ class Sequential(Model):
         
         else:
             yh= y_hat
-        #missing reg
             
         if eval:
             for m in self.metrics.keys():
-                met = self.metrics[m](y,yh)
+                met = self.metrics[m](y[0],yh,labels)
                 metrics.append(met)
             
             return metrics
             
         else:
+            mms=[]
             for m in self.metrics.keys():
                 met = self.metrics[m](y[0],yh,labels)
+                mms.append(met)
                 if val:
                     print("val_{}: {}   ".format(m,met),end=" ")
                 else:
                     print("{}: {}   ".format(m,met),end=" ")
 
+            return mms
 
-    def fit(self, train_data,validation_data=None, batch_size=32, epochs=5):
+    def fit(self, train_data,validation_data=None, batch_size=32, epochs=5,plot=False):
         x_train = train_data[0]
         y_train = train_data[1]
 
@@ -195,8 +198,29 @@ class Sequential(Model):
         
         x_train, y_train= self._bathcing(x_train, y_train,batch_size)
 
+
+        ##############visualization
+        if plot:
+            nf.visualize.Visualize.setNumberOfPlots(1+len(self.metrics))
+            plt.tight_layout()
+            visual_metrics=[]
+            if validation_data:
+                loss_title =["loss","val_loss"]
+                for met in self.metrics:
+                    visual_metrics.append(nf.visualize.Visualize([met,met+"_val"]))
+            else:
+                loss_title =["loss"]
+                for met in self.metrics:
+                    visual_metrics.append(nf.visualize.Visualize([met]))
+
+            visual_loss= nf.visualize.Visualize(loss_title)
+
+
+
+
         for i in range(epochs):
             print("Epoch {}/{}....".format(i+1,epochs),end=" ")
+            v_l=[]
             for j in range(no_of_batches_train):
                 curr_x =x_train[j].T
                 # print("####")
@@ -216,10 +240,12 @@ class Sequential(Model):
                 
                 if j == no_of_batches_train-1: #last batch
                     loss= self.loss(curr_y,y_hat)
+                    v_l.append(loss)
                     print("loss: {}....".format(loss),end=" ")
+
                     ######
                     # calc metrics
-                    self._calc_metrics(curr_y,y_hat,self.labels)
+                    mms=self._calc_metrics(curr_y,y_hat,self.labels)
                     ######
                 if batch_size ==1:
                     N= train_data[0].shape[0]
@@ -233,28 +259,60 @@ class Sequential(Model):
             if validation_data:
                 y_hat_val = self.forward(x_valid.T)
                 loss_val= self.loss(y_valid.T,y_hat_val)
+                v_l.append(loss_val)
                 print("val_loss: {}....".format(loss_val),end=" ")
                 ######
                 #calc metrics
-                self._calc_metrics(y_valid,y_hat_val,self.labels,True)
+                mms_val=self._calc_metrics(y_valid,y_hat_val,self.labels,True)
                 #####
             ###
+            if plot:
+                plt.clf()
+                visual_loss.draw(v_l)
+                i=0
+                for vis_met in visual_metrics:
+                    if validation_data:
+                        vis_met.draw([mms[i], mms_val[i]])
+                    else:
+                        vis_met.draw([mms[i]])
+                    
+                    i+=1
+                plt.pause(0.0001)
+
             print()
             self.zeroing()
+        if plot:
+            plt.show()
 
     def predict(self,data): #data dim is NxD .. N no of examples.. D no of dimension
         y_hat= self.forward(data.T)
         return y_hat.T
     
-    def evaluate(self,x_test,y_test):
+    def evaluate(self,x_test,y_test,draw_confusion_matrix=False):
         y_hat= self.forward(x_test.T)
         loss= self.loss(y_test.T,y_hat)
 
-        #########################################error here
         metrics=[]
         #calc metric
         metrics= self._calc_metrics(y_test.T,y_hat,self.labels,eval=True,metrics=metrics)
         #########################################
+        if draw_confusion_matrix:
+            y=y_test.T
+            if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:
+                if y_hat.shape[0]>1:
+                    yh = np.argmax(y_hat, axis=0)
+                else:
+                    yh= np.zeros_like(y_hat)
+                    yh[y_hat>=0.5] = np.max((y[0]))
+                    yh[y_hat<0.5] = np.min((y[0]))
+                    yh=np.array(yh[0], dtype='int')
+        
+            else:
+                yh= y_hat
+
+            mat= nf.nn.metrics.confusion_matrix(y[0],yh,self.labels)
+            print(mat)
+            nf.visualize.Visualize.heatmap(mat)
         return (loss , metrics)
     
     def get_weights(self):
