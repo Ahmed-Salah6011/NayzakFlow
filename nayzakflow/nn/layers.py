@@ -6,22 +6,23 @@ import pickle
 import matplotlib.pyplot as plt
 
 class Linear():
-    def __init__(self,n_output,n_input, activation="identity",name=None,parameter_initializer="normal",parameters=None,target=None):
+    def __init__(self,n_output,n_input, activation="identity",name=None,parameter_initializer="he_normal",parameters=None,target=None):
         self.n_output= n_output
         self.n_input= n_input
         self.name= name
         self.activation = nf.nn.activation.get_activations()[activation]
         self.act_name=activation
         self.target=target
+        self.labels=None
 
         if parameters:
             self.W= parameters['W']
             self.b= parameters['b']
 
         else:
-            if parameter_initializer == "normal":
-                self.W= np.random.normal(0,1,(self.n_output,self.n_input))
-                self.b= np.random.normal(0,1,(self.n_output,1))
+            if parameter_initializer == "he_normal":
+                self.W= np.random.normal(0,1,(self.n_output,self.n_input))*np.sqrt(2/self.n_input)
+                self.b= np.random.normal(0,1,(self.n_output,1))*np.sqrt(2/self.n_input)
             elif parameter_initializer == "uniform":
                 self.W= np.random.uniform(0,1,(self.n_output,self.n_input))
                 self.b= np.random.uniform(0,1,(self.n_output,1))
@@ -226,7 +227,7 @@ class Sequential(Model):
             k=0
             data=self.batch(x_train,y_train,batch_size)
             for curr_x,curr_y in data:
-                # print(curr_x.shape)
+                k+=1
                 curr_x =curr_x.T
                 curr_y = curr_y.T
                 y_hat= self.forward(curr_x)
@@ -239,7 +240,7 @@ class Sequential(Model):
                     dl = nf.nn.loss.get_diffs()[self.loss](curr_y,y_hat)
                     self.backward(dl)
                 
-                if int(0.1*no_of_batches_train) == (k+1):
+                if int(0.1*no_of_batches_train) == (k):
                     print("=",end="")
                     k=0
                 # print(j)
@@ -262,7 +263,6 @@ class Sequential(Model):
                 self.optimizer.update(self.layers,N)
                 self.zeroing()
                 j+=1
-                k+=1
             
             ###
             if validation_data:
@@ -359,6 +359,38 @@ class Sequential(Model):
         for layer in self.layers:
             layer.set_params(params[i][0],params[i][1])
             i+=1
+    
+    def save_model(self,path):
+
+        m= [self.layers,self.loss,self.metrics,self.optimizer,self.labels]
+
+        file = open(path, 'wb')
+
+        # dump information to that file
+        pickle.dump(m, file)
+
+        # close the file
+        file.close()
+    
+    def load_model(self,path):
+        file = open(path, 'rb')
+
+        # dump information to that file
+        m = pickle.load(file)
+
+        # close the file
+        file.close()
+
+
+        self.layers= m[0]
+        self.loss= m[1]
+        self.metrics= m[2]
+        self.optimizer= m[3]
+        self.labels = m[4]
+        
+
+    
+
         
 
 
