@@ -7,17 +7,30 @@ Deep Learning framework facilitates the usage of neural networks and models arch
 *****************************************************************
 ### Description of each module
 
-*Data Module:*
+- ***Data Module:***
 Supports different classes to load data either from sparse folders or from csv files
 
-*Visualize Module:*
+- ***Visualize Module:***
 Supports live plotting visualization of different things like losses and metrics
 
-*Optimizer Module:*
+- ***Optimizer Module:***
 Supports different classes for different Gradient Descent optimizers
 
-*NN Module:*
+- ***NN Module:***
+Supports different modules that helps in Neural Network designing
+
+      1. Activation: contians different types of activation functions
+      
+      2. Loss: contian different loss functions
+      
+      3. Layers: contain different layers
+      
+      4. Metrics: has functions for all evaluation metrics
 
 
-
-
+*******************************************************************
+## Requirements
+- python 3.6 
+- numpy
+- matplotlib
+- seaborn
