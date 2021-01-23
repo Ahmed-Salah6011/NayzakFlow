@@ -42,6 +42,7 @@ class Visualize:
 
     @staticmethod
     def setNumberOfPlots(number):
+        Visualize.count=0
         while(Visualize.rows*Visualize.columns < number):
             if((Visualize.columns+Visualize.rows)%2 != 0):
                 Visualize.columns += 1

@@ -21,8 +21,8 @@ class Linear():
 
         else:
             if parameter_initializer == "he_normal":
-                self.W= np.random.normal(0,1,(self.n_output,self.n_input))*np.sqrt(2/self.n_input)
-                self.b= np.random.normal(0,1,(self.n_output,1))*np.sqrt(2/self.n_input)
+                self.W= np.random.randn(self.n_output,self.n_input)*np.sqrt(2/self.n_input)
+                self.b= np.random.randn(self.n_output,1)*np.sqrt(2/self.n_input)
             elif parameter_initializer == "uniform":
                 self.W= np.random.uniform(0,1,(self.n_output,self.n_input))
                 self.b= np.random.uniform(0,1,(self.n_output,1))
@@ -221,6 +221,10 @@ class Sequential(Model):
 
 
         for i in range(epochs):
+            if isinstance(self.optimizer,nf.optimizer.Adam):
+                self.optimizer.init_params(self.layers)
+        
+
             print("Epoch {}/{}".format(i+1,epochs))
             v_l=[]
             j=0
