@@ -260,6 +260,7 @@ class Sequential(Model):
                     N= curr_x.shape[-1]
 
                 self.optimizer.update(self.layers,N)
+                self.zeroing()
                 j+=1
                 k+=1
             
@@ -288,7 +289,6 @@ class Sequential(Model):
                 plt.pause(0.0001)
 
             print()
-            self.zeroing()
         if plot:
             plt.show()
 
