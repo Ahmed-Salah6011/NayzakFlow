@@ -38,3 +38,4 @@ Supports different modules that helps in Neural Network designing
 - numpy
 - matplotlib
 - seaborn
+- matrices
