@@ -140,11 +140,20 @@ class Sequential(Model):
             yh= y_hat
             
         if eval:
+            pre = rec = f1 = None
+            matrix = nf.nn.metrics.confusion_matrix(y[0],yh,labels)
             for m in self.metrics.keys():
+                if m == 'precision':
+                    pre=nf.nn.metrics.new_precision(y[0],yh,labels,matrix)
+                if m == 'recall':
+                    rec=nf.nn.metrics.new_recall(y[0],yh,labels,matrix)
+                if m == 'f1-score':
+                    f1=nf.nn.metrics.new_f1_score(y[0],yh,labels,matrix)
+
                 met = self.metrics[m](y[0],yh,labels)
                 metrics.append(met)
             
-            return metrics
+            return metrics , pre , rec , f1
             
         else:
             mms=[]
@@ -307,7 +316,21 @@ class Sequential(Model):
 
         metrics=[]
         #calc metric
-        metrics= self._calc_metrics(y_test.T,y_hat,self.labels,eval=True,metrics=metrics)
+        metrics , pre , rec , f1 = self._calc_metrics(y_test.T,y_hat,self.labels,eval=True,metrics=metrics)
+      
+        if pre is not None :
+            print(" Precision :")
+            for i in range(pre.shape[0]):
+                print("Class {} : {}".format(i,pre[i]))
+        if rec is not None :
+            print(" Recall :")
+            for i in range(rec.shape[0]):
+                print("Class {} : {}".format(i,rec[i]))
+        if f1 is not None :
+            print("F1-Score :")
+            for i in range(f1.shape[0]):
+                print("Class {} : {}".format(i,f1[i]))
+        
         #########################################
         if draw_confusion_matrix:
             y=y_test.T
@@ -392,44 +415,3 @@ class Sequential(Model):
         self.metrics= m[2]
         self.optimizer= m[3]
         self.labels = m[4]
-        
-
-    
-
-        
-
-
-
-        
-            
-
-
-
-
-
-
-
-
-
-
-        
-
-        
-
-        
-
-
-    
-
-
-
-
-        
-    
-
-
-    
-
-
-    
-    

@@ -5,8 +5,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="nayzakflow", # Replace with your own username
-    version="1.0.0",
+    name="nayzak_flow", # Replace with your own username
+    version="1.0.1",
     author="Nayzak_Team",
     description="Deep Learning Framework",
     long_description=long_description,
