@@ -15,6 +15,7 @@ def calc(confusion_matrix):
         FN = confusion_matrix[1][0]
         TN = confusion_matrix[1][1]
         return TP,FN,FP,TN
+        
     length = np.sum(confusion_matrix)
     # print(length)
     I = np.eye(confusion_matrix.shape[0])

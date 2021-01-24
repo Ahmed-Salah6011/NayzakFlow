@@ -250,14 +250,15 @@ class Sequential(Model):
                 # print(j)
                 # print(no_of_batches_train)
                 if j == no_of_batches_train-1: #last batch
-                    loss= self.loss(curr_y,y_hat)
+                    yhat_all = self.forward(x_train.T)
+                    loss= self.loss(y_train.T,yhat_all)
                     v_l.append(loss)
                     print()
                     print("loss: {}....".format(loss),end=" ")
 
                     ######
                     # calc metrics
-                    mms=self._calc_metrics(curr_y,y_hat,self.labels)
+                    mms=self._calc_metrics(y_train.T,yhat_all,self.labels)
                     ######
                 if batch_size ==1:
                     N= train_data[0].shape[0]
