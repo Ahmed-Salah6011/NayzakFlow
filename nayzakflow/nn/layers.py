@@ -313,25 +313,36 @@ class Sequential(Model):
     def evaluate(self,x_test,y_test,draw_confusion_matrix=False):
         y_hat= self.forward(x_test.T)
         loss= self.loss(y_test.T,y_hat)
-
+        data_fr=pd.DataFrame()
         metrics=[]
         #calc metric
         metrics , pre , rec , f1 = self._calc_metrics(y_test.T,y_hat,self.labels,eval=True,metrics=metrics)
-      
-        if pre is not None :
-            print(" Precision :")
-            for i in range(pre.shape[0]):
-                print("Class {} : {}".format(i,pre[i]))
-        if rec is not None :
-            print(" Recall :")
-            for i in range(rec.shape[0]):
-                print("Class {} : {}".format(i,rec[i]))
-        if f1 is not None :
-            print("F1-Score :")
-            for i in range(f1.shape[0]):
-                print("Class {} : {}".format(i,f1[i]))
-        
-        #########################################
+        if self.labels.shape[0] !=2 :
+            if pre is not None :
+                data_fr["Precision"]=pre
+                # print(" Precision :")
+                # for i in range(pre.shape[0]):
+                #     print("Class {} : {}".format(i,pre[i]))
+            if rec is not None :
+                data_fr["Recall"]=rec
+                # print(" Recall :")
+                # for i in range(rec.shape[0]):
+                #     print("Class {} : {}".format(i,rec[i]))
+            if f1 is not None :
+                data_fr["F1-Score"]=f1
+                # print("F1-Score :")
+                # for i in range(f1.shape[0]):
+                #     print("Class {} : {}".format(i,f1[i]))
+            print(data_fr)
+        elif self.labels.shape[0] == 2:
+            if pre is not None :
+                print(" Precision :{} ".format(pre))
+            if rec is not None :
+                print(" Recall :{} ".format(rec))
+            if f1 is not None :
+                print(" F1-Score :{} ".format(f1))
+              
+            #########################################
         if draw_confusion_matrix:
             y=y_test.T
             if self.loss != nf.nn.loss.MSE and self.loss != nf.nn.loss.MAE:

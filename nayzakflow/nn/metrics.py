@@ -45,7 +45,7 @@ def new_recall_sum(y,yhat,labels):
         FP = matrix[0][1]
         FN = matrix[1][0]
         TN = matrix[1][1]
-        return TP / (TP + FN)
+        return TP / (TP + FN) if (TP + FN) else 0
     ls=new_recall(y,yhat,labels,matrix)
     return np.sum(ls) / labels.shape[0]
 
@@ -70,7 +70,7 @@ def new_precision_sum(y,yhat,labels):
         FP = matrix[0][1]
         FN = matrix[1][0]
         TN = matrix[1][1]
-        return TP / (TP + FP)
+        return TP / (TP + FP) if (TP + FP) else 0
     ls=new_precision(y,yhat,labels,matrix)
     return np.sum(ls) / labels.shape[0]
 
@@ -80,11 +80,8 @@ def new_f1_score(y,yhat,labels,matrix):
     percision1=new_precision(y,yhat,labels,matrix)
     term1 =2 *  recall1 * percision1
     term2 =(recall1 + percision1)
-    if term2 == 0 :
-        return 0
-    else:
-        result = term1 / term2
-        return result
+    result = [term1[i] / term2[i] if term2[i] else 0 for i in range(term1.shape[0])]
+    return np.array(result)
 
 def new_f1_score_sum(y,yhat,labels):
     matrix = confusion_matrix(y,yhat,labels)
@@ -93,9 +90,9 @@ def new_f1_score_sum(y,yhat,labels):
         FP = matrix[0][1]
         FN = matrix[1][0]
         TN = matrix[1][1]
-        pre = TP / (TP + FP)
-        recal = TP / (TP + FN)
-        return (2 * pre * recal) / (pre + recal)
+        pre = TP / (TP + FP) if (TP + FP) else 0
+        recal = TP / (TP + FN) if (TP + FN) else 0
+        return (2 * pre * recal) / (pre + recal) if (pre + recal) else 0
     ls=new_f1_score(y,yhat,labels,matrix)
     return np.sum(ls) / labels.shape[0]
 
@@ -126,9 +123,9 @@ def new_accuracy_sum(y,yhat,labels):
         FP = matrix[0][1]
         FN = matrix[1][0]
         TN = matrix[1][1]
-        return (TP + TN) / (TP + TN + FP + FN)
+        return (TP + TN) / (TP + TN + FP + FN) if (TP + TN + FP + FN) else 0
     total_True = np.sum(I*matrix)
-    acc = total_True / np.sum(matrix)
+    acc = total_True / np.sum(matrix) if np.sum(matrix) else 0
     # ls=new_accuracy(y,yhat,labels,matrix)
     #np.sum(ls) / labels.shape[0]
     return acc

@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="nayzak_flow", # Replace with your own username
-    version="1.0.1",
+    version="1.0.4",
     author="Nayzak_Team",
     description="Deep Learning Framework",
     long_description=long_description,
