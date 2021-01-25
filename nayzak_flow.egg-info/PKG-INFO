@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: nayzak-flow
-Version: 1.0.4
+Version: 1.0.5
 Summary: Deep Learning Framework
 Home-page: https://github.com/Ahmed-Salah6011/NayzakFlow
 Author: Nayzak_Team
@@ -10,7 +10,7 @@ Description: # **NayzakFlow**
         
         You can see the documentation of the framework [here](https://drive.google.com/file/d/1FQxYESiyVTall10VOctg4CVCYukubD4L/view?usp=sharing)
         
-        You can install it using 'pip install -i https://test.pypi.org/simple/ nayzak-flow==1.0.3' command
+        You can install it using 'pip install -i https://test.pypi.org/simple/ nayzak-flow==1.0.4' command
         *****************************************************************
         ## Modules
         ![Image](https://github.com/Ahmed-Salah6011/NayzakFlow/blob/master/modules.png)

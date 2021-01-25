@@ -286,7 +286,7 @@ class Sequential(Model):
                 print("val_loss: {}....".format(loss_val),end=" ")
                 ######
                 #calc metrics
-                mms_val=self._calc_metrics(y_valid,y_hat_val,self.labels,True)
+                mms_val=self._calc_metrics(y_valid.T,y_hat_val,self.labels,True)
                 #####
             ###
             if plot:
